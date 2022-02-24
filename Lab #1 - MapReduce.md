@@ -1,5 +1,22 @@
 # Lab #1 - MapReduce
 
+## What
+
++ Word Counter
+
+  <img src="pics/mapReduce-what-thread.png" alt="mapReduce-what-thread" style="zoom:40%;" />
+
++ 把单线程能完成的工作转换成用多线程完成，为什么？
+
+  + 在单线程的情况下，统计10**MB**的.txt可能一眨眼的功夫就能完成；但如果是1**GB**的.txt，在单线程的情况下是需要等待一会的
+
++ 有没有一种可能使处理1**GB**像处理10**MB**文档一样快？
+
+  + 将1**GB**的大文档切割成100个10**MB**的小文档，然后将其分配给对应的100个工作线程
+  + 这些线程并发或并行处理，待100个小文档全部处理完再进行合并，得到最后的Word Counter结果
+
+  <img src="pics/mapReduce-threads.png" alt="mapReduce-threads" style="zoom:100%;" />
+
 ## Design
 
 ### Common
@@ -13,26 +30,25 @@
 
 + 在MapReduce中，`Task`的分配流程如下
 
-<img src="pics/mapReduce-rpc-notion.png" alt="mapReduce-rpc-notion" style="zoom:50%;" />
+<img src="pics/mapReduce-rpc-notion.png" alt="mapReduce-rpc-notion" style="zoom:40%;" />
 
 只有在清楚需要传递哪些讯息之后，才能设计出满足需求的RPC
 
-+ `AskTaskArgs`：对应「step1. Ask Task」，该rpc不要传达具体讯息，只需让$\text{Master}$知道该$\text{Worker}$在请求`Task`即可
++ `AskTaskArgs`：对应「step1. Ask Task」，该rpc不要传达具体讯息，只需让Master知道该​Worker在请求`Task`即可
 + `TaskReply`：对应「step2. Dispatch Task」，该rpc需要包含`TaskType`和存放对应类型的`Task`队列
 + `TaskDoneArgs`：对应「step3. Task Done」，该rpc同`TaskReply`相似
 
 ### Master
 
-+ $\text{Master}$需要有四个`TaskQueue`，用来管理`Task`
-+ 为什么是四个？
++ Master需要有四个`TaskQueue`，用来管理`Task`。为什么是四个？
   + 多采用容器的思想，可以大大减少对于细节的研究
   + `mapTaskQ`和`reduceTaskQ`用来管理还未分配的`Task`
   + `mapRunningQ`和`reduceRunningQ`用来跟踪已被分配的`Task`
-    + 为什么需要跟踪？因为领到该`Task`的$\text{Worker}$有可能会宕机，如果宕机了就会导致$\text{Master}$迟迟收不到`Processed Task`。对于$\text{Master}$而言缺少一个`Processed Task`就意味着整个$\text{Process}$失败，所以$\text{Master}$需要有一种机制能够检测出宕机，并找出对应的`Task`，将其重新提上日程，分配给别的「on-line」$\text{Worker}$
+    + 为什么需要跟踪？因为领到该`Task`的Worker有可能会宕机，如果宕机了就会导致Master迟迟收不到`Processed Task`。对于Master而言缺少一个`Processed Task`就意味着整个Process失败，所以Master需要有一种机制能够检测出宕机，并找出对应的`Task`，将其重新提上日程，分配给别的「on-line」Worker
 
 ### Worker
 
-+ $\text{Worker}$的流程很简单，要不就是在`Ask Task`，要不就是在`Working`。如果收到$\text{Master}$的终止信号，则结束进程
++ Worker的流程很简单，要不就是在`Ask Task`，要不就是在`Working`。如果收到Master的终止信号，则结束进程
 
 ## Implementation
 
@@ -94,7 +110,7 @@
 
 ### Master
 
-+ 定义$\text{Master}$的结构
++ 定义Master的结构
 
   ```go
   type Master struct {
@@ -153,7 +169,7 @@
   }
   ```
 
-  在初始化好$\text{Master}$后又开了三个goroutine，主要就是监视作用
+  在初始化好Master后又开了三个goroutine，主要就是监视作用
 
   ```go
   func (m *Master) isEnd() {
@@ -168,7 +184,7 @@
   }
   ```
 
-  监视$\text{Master}$是否已经回收了所有的`Processed Task`，如果是则启动结束流程工作进程
+  监视Master是否已经回收了所有的`Processed Task`，如果是则启动结束流程工作进程
 
   ```go
   func (m *Master)mapQHasRest() {
@@ -208,7 +224,7 @@
   }
   ```
 
-  这两个函数相似，监视对应的`RunningQ`是否有迟迟未完成的`Task`，如果有则将`Task`重新打捞给`TaskQueue`。迟迟未完成就意味着领走该`Task`的$\text{Worker}$宕机了
+  这两个函数相似，监视对应的`RunningQ`是否有迟迟未完成的`Task`，如果有则将`Task`重新打捞给`TaskQueue`。Ps. 迟迟未完成就意味着领走该`Task`的Worker宕机了
 
 + `AskTask()`
 
@@ -319,7 +335,7 @@
   }
   ```
 
-  + 在$\text{Worker}$完成`Task`后需要根据`TaskType`类型进行相应处理
+  + 在Worker完成`Task`后需要根据`TaskType`类型进行相应处理
   + 一个`MapTask`在被处理后就会分裂成`nReduce`个`ReduceTask`，所以每个新`ReduceTask`需要用`partIdx`标记清楚
   + 而`ReduceTask`只需要到`RunningQ`中进行注销即可
 
@@ -486,5 +502,5 @@
 
 ## Result
 
-<img src="pics/lab#1-result.png" alt="lab#1-result" style="zoom:50%;" />
+<img src="pics/mapReduce-result.png" alt="lab#1-result" style="zoom:50%;" />
 
