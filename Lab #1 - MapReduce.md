@@ -8,14 +8,23 @@
 
 + 把单线程能完成的工作转换成用多线程完成，为什么？
 
-  + 在单线程的情况下，统计10**MB**的.txt可能一眨眼的功夫就能完成；但如果是1**GB**的.txt，在单线程的情况下是需要等待一会的
+  + 在单线程的情况下，统计1**MB**的.txt可能一眨眼的功夫就能完成；但如果是1**GB**的.txt，在单线程的情况下是需要等待一会的
 
-+ 有没有一种可能使处理1**GB**像处理10**MB**文档一样快？
++ 有没有一种可能使处理1**GB**像处理1**MB**文档一样快？
 
-  + 将1**GB**的大文档切割成100个10**MB**的小文档，然后将其分配给对应的100个工作线程
-  + 这些线程并发或并行处理，待100个小文档全部处理完再进行合并，得到最后的Word Counter结果
+  + 将1**GB**的大文档切割成1000个1**MB**的小文档，然后将其分配给对应的1000个工作线程
+  + 这些线程并发或并行处理，待1000个小文档全部处理完再进行合并，得到最后的Word Counter结果
 
-  <img src="pics/mapReduce-threads.png" alt="mapReduce-threads" style="zoom:100%;" />
+  <img src="pics/mapReduce-slice.png" alt="mapReduce-slice" style="zoom:50%;" />
+
+  这方法当然行，但是还是不够快，没把分布式的特点发挥地淋漓尽致。
+
+  + 我们考虑到在Counter阶段还可以再做些改进，比如分成两类`Task`分别为`MapTask`和`ReduceTask`
+  + 处理`MapTask`的Worker只负责将出现的word打印出来，而不是去计数该word
+  + 计数的工作让处理`ReduceTask`的Worker来做
+  + 如此这般，简化了业务逻辑，利用分布式的特点实现了分工明确，类似流水线，能够大大提高产出效率
+
+  <img src="pics/mapReduce-threads.png" alt="mapReduce-threads" style="zoom:50%;" />
 
 ## Design
 
