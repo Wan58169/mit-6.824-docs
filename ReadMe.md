@@ -7,3 +7,5 @@
 [http://nil.csail.mit.edu/6.824/2020/index.html](http://nil.csail.mit.edu/6.824/2020/index.html)
 ## PROJECTS
 + [x] [Lab #1 - MapReduce](https://github.com/Wan58169/mit-6.824-docs/blob/master/Lab%20%231%20-%20MapReduce.md)
++ [x] [Lab #2 - Raft](https://github.com/Wan58169/mit-6.824-docs/blob/master/Lab%20%232%20-%20Raft.md)
+
