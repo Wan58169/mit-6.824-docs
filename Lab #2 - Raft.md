@@ -831,5 +831,9 @@ func fixedHeartBeatTimeOut() time.Duration {
 }
 ```
 
+# Result
 
+<img src="pics/Raft-result2B.png" alt="Raft-result2B" style="zoom:50%;" />
+
+<img src="pics/Raft-result2C.png" alt="Raft-result2C" style="zoom:50%;" />
 
